@@ -1,7 +1,7 @@
 import { prisma } from 'db/client'
 import React from 'react'
 
-
+export const revalidate = 60; // disable ISR, always fetch fresh data
 export default  async function Home() {
 
   const users= await prisma.user.findMany()
