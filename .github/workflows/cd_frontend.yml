@@ -42,7 +42,7 @@ jobs:
             sudo docker pull ${{ secrets.DOCKER_USERNAME }}/mono-frontend:${{ github.sha }}
             sudo docker stop frontend || true
             sudo docker rm frontend || true
-            sudo docker run -d --name frontend -p 4000:3000 ${{ secrets.DOCKER_USERNAME }}/mono-frontend:${{ github.sha }}
+            sudo docker run -d --name frontend -p 4000:3000 -e DATABASE_URL="${{ secrets.DATABASE_URL }}" ${{ secrets.DOCKER_USERNAME }}/mono-frontend:${{ github.sha }}
             sudo docker images --format "{{.Repository}}:{{.Tag}} {{.ID}}" | grep "mono-frontend" | grep -v "${{ github.sha }}" | awk '{print $2}' | xargs sudo docker rmi -f || true
         
 
