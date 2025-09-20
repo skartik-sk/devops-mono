@@ -6,6 +6,7 @@ COPY ./package.json ./package.json
 COPY ./bun.lock ./bun.lock
 COPY ./packages ./packages
 COPY ./turbo.json ./turbo.json
+COPY ./apps/socket/package.json ./apps/socket/package.json
 
 
 RUN bun install
