@@ -27,9 +27,13 @@ jobs:
 
       - name: Deploy to Server
         run: |
-          echo "${{ secrets.SSH_PK }}" > ~/private_key
-          chmod 600 ~/private_key
-          ssh -o StrictHostKeyChecking=no -i ~/private_key ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PK }}" > ~/.ssh/private_key
+          chmod 600 ~/.ssh/private_key
+          chmod 700 ~/.ssh
+          # Verify key format
+          ssh-keygen -y -f ~/.ssh/private_key > /dev/null
+          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ~/.ssh/private_key ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
             docker pull ${{ secrets.DOCKER_USERNAME }}/mono-backend:${{ github.sha }}
             docker stop backend || true
             docker rm backend || true
