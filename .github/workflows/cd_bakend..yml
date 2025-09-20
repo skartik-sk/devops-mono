@@ -33,21 +33,14 @@ jobs:
           key: ${{ secrets.PRIVATE_SSH }}
           port: 22
           script: |
-            # Aggressive Docker cleanup before deployment
             echo "Cleaning up Docker resources..."
             sudo docker system prune -a -f --volumes
-            # Remove all old mono-backend images except the one we're about to pull
             sudo docker images --format "{{.Repository}}:{{.Tag}} {{.ID}}" | grep "mono-backend" | grep -v "${{ github.sha }}" | awk '{print $2}' | xargs sudo docker rmi -f || true
-            # Remove dangling images
             sudo docker image prune -f
-            # Pull the new image
             sudo docker pull ${{ secrets.DOCKER_USERNAME }}/mono-backend:${{ github.sha }}
-            # Stop and remove old container
             sudo docker stop backend || true
             sudo docker rm backend || true
-            # Run new container
             sudo docker run -d --name backend -p 4040:8080 ${{ secrets.DOCKER_USERNAME }}/mono-backend:${{ github.sha }}
-            # Final cleanup - keep only the running image
             sudo docker images --format "{{.Repository}}:{{.Tag}} {{.ID}}" | grep "mono-backend" | grep -v "${{ github.sha }}" | awk '{print $2}' | xargs sudo docker rmi -f || true
         
 
