@@ -33,9 +33,13 @@ jobs:
           key: ${{ secrets.PRIVATE_SSH }}
           port: 22
           script: |
+            # Clean up old Docker resources first
+            sudo docker system prune -f
             sudo docker pull ${{ secrets.DOCKER_USERNAME }}/mono-backend:${{ github.sha }}
             sudo docker stop backend || true
             sudo docker rm backend || true
             sudo docker run -d --name backend -p 4040:8080 ${{ secrets.DOCKER_USERNAME }}/mono-backend:${{ github.sha }}
+            # Remove old images (keep only 3 latest)
+            sudo docker images | grep "mono-backend" | tail -n +4 | awk '{print $3}' | xargs sudo docker rmi -f || true
         
 

@@ -33,9 +33,13 @@ jobs:
           key: ${{ secrets.PRIVATE_SSH }}
           port: 22
           script: |
+            # Clean up old Docker resources first
+            sudo docker system prune -f
             sudo docker pull ${{ secrets.DOCKER_USERNAME }}/mono-ws:${{ github.sha }}
             sudo docker stop ws || true
             sudo docker rm ws || true
             sudo docker run -d --name ws -p 4041:8081 ${{ secrets.DOCKER_USERNAME }}/mono-ws:${{ github.sha }}
+            # Remove old images (keep only 3 latest)
+            sudo docker images | grep "mono-ws" | tail -n +4 | awk '{print $3}' | xargs sudo docker rmi -f || true
         
 
