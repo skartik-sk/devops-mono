@@ -14,7 +14,7 @@ RUN bun install
 COPY ./apps/web ./apps/web
 RUN bun run db:generate
 RUN echo "My build argument is: $DATABASE_URL"
-RUN DATABASE_URL=${DATABASE_URL} bun run build
+RUN cd apps/web && DATABASE_URL=${DATABASE_URL} bun run build
 EXPOSE 3001
 
 CMD ["bun", "run", "start:web"]

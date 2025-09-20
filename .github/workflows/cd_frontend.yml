@@ -35,12 +35,10 @@ jobs:
           key: ${{ secrets.PRIVATE_SSH }}
           port: 22
           script: |
-            ls
-            sudo su
-            docker pull ${{ secrets.DOCKER_USERNAME }}/mono-frontend:${{ github.sha }}
-            docker stop frontend || true
-            docker rm frontend || true
-            docker run -d --name frontend -p 4040:8080 ${{ secrets.DOCKER_USERNAME }}/mono-frontend:${{ github.sha }}
+            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/mono-frontend:${{ github.sha }}
+            sudo docker stop frontend || true
+            sudo docker rm frontend || true
+            sudo docker run -d --name frontend -p 4000:3001 ${{ secrets.DOCKER_USERNAME }}/mono-frontend:${{ github.sha }}
         
 
 

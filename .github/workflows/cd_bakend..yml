@@ -33,11 +33,9 @@ jobs:
           key: ${{ secrets.PRIVATE_SSH }}
           port: 22
           script: |
-            ls
-            sudo su
-            docker pull ${{ secrets.DOCKER_USERNAME }}/mono-backend:${{ github.sha }}
-            docker stop backend || true
-            docker rm backend || true
-            docker run -d --name backend -p 4040:8080 ${{ secrets.DOCKER_USERNAME }}/mono-backend:${{ github.sha }}
+            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/mono-backend:${{ github.sha }}
+            sudo docker stop backend || true
+            sudo docker rm backend || true
+            sudo docker run -d --name backend -p 4040:8080 ${{ secrets.DOCKER_USERNAME }}/mono-backend:${{ github.sha }}
         
 
