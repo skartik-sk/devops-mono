@@ -25,5 +25,12 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/mono-backend:${{ github.sha }}
 
-      
+      - name: Deploy to Server
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+            docker pull ${{ secrets.DOCKER_USERNAME }}/mono-backend:${{ github.sha }}
+            docker stop backend || true
+            docker rm backend || true
+            docker run -d --name backend -p 4040:8080 ${{ secrets.DOCKER_USERNAME }}/mono-backend:${{ github.sha }}
+          EOF
       

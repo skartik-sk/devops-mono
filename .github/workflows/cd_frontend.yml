@@ -27,5 +27,13 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/mono-frontend:${{ github.sha }}
 
+      - name: Deploy to Server
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+            docker pull ${{ secrets.DOCKER_USERNAME }}/mono-frontend:${{ github.sha }}
+            docker stop frontend || true
+            docker rm frontend || true
+            docker run -d --name frontend -p 4000:3001 ${{ secrets.DOCKER_USERNAME }}/mono-frontend:${{ github.sha }}
+          EOF
       
       

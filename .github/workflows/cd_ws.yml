@@ -25,5 +25,12 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/mono-ws:${{ github.sha }}
 
-      
+      - name: Deploy to Server
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+            docker pull ${{ secrets.DOCKER_USERNAME }}/mono-ws:${{ github.sha }}
+            docker stop ws || true
+            docker rm ws || true
+            docker run -d --name ws -p 4041:8081 ${{ secrets.DOCKER_USERNAME }}/mono-ws:${{ github.sha }}
+          EOF
       
