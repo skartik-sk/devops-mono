@@ -27,7 +27,7 @@ jobs:
 
       - name: Deploy to Server
         run: |
-          echo "${{ secrets.SERVER_SSH_KEY }}" > private_key
+          echo "${{ secrets.SSH_PK }}" > private_key
           chmod 700 private_key
           ssh -o StrictHostKeyChecking=no -i private_key ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
             docker pull ${{ secrets.DOCKER_USERNAME }}/mono-ws:${{ github.sha }}
