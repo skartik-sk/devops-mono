@@ -21,9 +21,9 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: .
-          file: ./docker/Dockerfile.backend
+          file: ./docker/Dockerfile.ws
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/devops/mono-backend:${{ github.sha }}
+          tags: ${{ secrets.DOCKER_USERNAME }}/devops/mono-ws:${{ github.sha }}
 
       
       
