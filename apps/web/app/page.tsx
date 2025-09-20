@@ -9,6 +9,7 @@ export default  async function Home() {
   return ( 
     <div>
       <h1 className="text-3xl font-bold underline">Hello, World!</h1>
+      <h1 className="text-2xl font-bold mt-4">Welcome to the User List</h1>
       <h2 className="text-2xl font-bold mt-4">Users:</h2>
       <ul>
         {users && users.map((user) => (
