@@ -30,7 +30,7 @@ jobs:
         with:
           host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SSH_PK }}
+          key: ${{ secrets.PRIVATE_SSH }}
           port: 22
           script: |
             ls
