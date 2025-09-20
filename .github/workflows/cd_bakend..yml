@@ -27,10 +27,9 @@ jobs:
 
       - name: Deploy to Server
         run: |
-          echo "${{ secrets.SSH_PK }}" > private_key
-          sudo su 
-          chmod 700 private_key
-          ssh -o StrictHostKeyChecking=no -i private_key ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+          echo "${{ secrets.SSH_PK }}" &> ~/private_key
+          chmod 700 /home/runner/private_key
+          ssh -o StrictHostKeyChecking=no -i ~/private_key ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
             docker pull ${{ secrets.DOCKER_USERNAME }}/mono-backend:${{ github.sha }}
             docker stop backend || true
             docker rm backend || true
