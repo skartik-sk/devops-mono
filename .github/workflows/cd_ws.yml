@@ -33,13 +33,21 @@ jobs:
           key: ${{ secrets.PRIVATE_SSH }}
           port: 22
           script: |
-            # Clean up old Docker resources first
-            sudo docker system prune -f
+            # Aggressive Docker cleanup before deployment
+            echo "Cleaning up Docker resources..."
+            sudo docker system prune -a -f --volumes
+            # Remove all old mono-ws images except the one we're about to pull
+            sudo docker images --format "{{.Repository}}:{{.Tag}} {{.ID}}" | grep "mono-ws" | grep -v "${{ github.sha }}" | awk '{print $2}' | xargs sudo docker rmi -f || true
+            # Remove dangling images
+            sudo docker image prune -f
+            # Pull the new image
             sudo docker pull ${{ secrets.DOCKER_USERNAME }}/mono-ws:${{ github.sha }}
+            # Stop and remove old container
             sudo docker stop ws || true
             sudo docker rm ws || true
+            # Run new container
             sudo docker run -d --name ws -p 4041:8081 ${{ secrets.DOCKER_USERNAME }}/mono-ws:${{ github.sha }}
-            # Remove old images (keep only 3 latest)
-            sudo docker images | grep "mono-ws" | tail -n +4 | awk '{print $3}' | xargs sudo docker rmi -f || true
+            # Final cleanup - keep only the running image
+            sudo docker images --format "{{.Repository}}:{{.Tag}} {{.ID}}" | grep "mono-ws" | grep -v "${{ github.sha }}" | awk '{print $2}' | xargs sudo docker rmi -f || true
         
 

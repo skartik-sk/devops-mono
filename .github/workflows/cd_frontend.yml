@@ -35,14 +35,22 @@ jobs:
           key: ${{ secrets.PRIVATE_SSH }}
           port: 22
           script: |
-            # Clean up old Docker resources first
-            sudo docker system prune -f
+            # Aggressive Docker cleanup before deployment
+            echo "Cleaning up Docker resources..."
+            sudo docker system prune -a -f --volumes
+            # Remove all old mono-frontend images except the one we're about to pull
+            sudo docker images --format "{{.Repository}}:{{.Tag}} {{.ID}}" | grep "mono-frontend" | grep -v "${{ github.sha }}" | awk '{print $2}' | xargs sudo docker rmi -f || true
+            # Remove dangling images
+            sudo docker image prune -f
+            # Pull the new image
             sudo docker pull ${{ secrets.DOCKER_USERNAME }}/mono-frontend:${{ github.sha }}
+            # Stop and remove old container
             sudo docker stop frontend || true
             sudo docker rm frontend || true
-            sudo docker run -d --name frontend -p 4000:3000 ${{ secrets.DOCKER_USERNAME }}/mono-frontend:${{ github.sha }}
-            # Remove old images (keep only 3 latest)
-            sudo docker images | grep "mono-frontend" | tail -n +4 | awk '{print $3}' | xargs sudo docker rmi -f || true
+            # Run new container
+            sudo docker run -d --name frontend -p 3000:3000 ${{ secrets.DOCKER_USERNAME }}/mono-frontend:${{ github.sha }}
+            # Final cleanup - keep only the running image
+            sudo docker images --format "{{.Repository}}:{{.Tag}} {{.ID}}" | grep "mono-frontend" | grep -v "${{ github.sha }}" | awk '{print $2}' | xargs sudo docker rmi -f || true
         
 
 
