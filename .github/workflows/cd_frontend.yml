@@ -1,4 +1,4 @@
-name: CI/CD for Backend
+name: CI/CD for Frontend
 on:
   push:
     branches: [ main ]
@@ -25,7 +25,7 @@ jobs:
           build-args: |
             DATABASE_URL=${{ secrets.DATABASE_URL }}
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/devops/mono-frontend:${{ github.sha }}
+          tags: ${{ secrets.DOCKER_USERNAME }}/mono-frontend:${{ github.sha }}
 
       
       

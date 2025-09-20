@@ -1,4 +1,4 @@
-name: CI/CD for Backend
+name: CI/CD for Ws
 on:
   push:
     branches: [ main ]
@@ -23,7 +23,7 @@ jobs:
           context: .
           file: ./docker/Dockerfile.ws
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/devops/mono-ws:${{ github.sha }}
+          tags: ${{ secrets.DOCKER_USERNAME }}/mono-ws:${{ github.sha }}
 
       
       
