@@ -25,14 +25,19 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/mono-ws:${{ github.sha }}
 
-      - name: Deploy to Server
-        run: |
-          echo "${{ secrets.SSH_PK }}" &> ~/private_key
-          chmod 700 /home/runner/private_key
-          ssh -o StrictHostKeyChecking=no -i ~/private_key ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+      - name: Setup SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.PRIVATE_SSH }}
+          port: 22
+          script: |
+            ls
+            sudo su
             docker pull ${{ secrets.DOCKER_USERNAME }}/mono-ws:${{ github.sha }}
             docker stop ws || true
             docker rm ws || true
             docker run -d --name ws -p 4041:8081 ${{ secrets.DOCKER_USERNAME }}/mono-ws:${{ github.sha }}
-          EOF
-      
+        
+

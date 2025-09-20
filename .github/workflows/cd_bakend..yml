@@ -34,25 +34,10 @@ jobs:
           port: 22
           script: |
             ls
+            sudo su
             docker pull ${{ secrets.DOCKER_USERNAME }}/mono-backend:${{ github.sha }}
             docker stop backend || true
             docker rm backend || true
             docker run -d --name backend -p 4040:8080 ${{ secrets.DOCKER_USERNAME }}/mono-backend:${{ github.sha }}
         
 
-
-      - name: Deploy to Server
-        run: |
-          echo "${{ secrets.SSH_PK }}" &> ~/ssh_key
-          mkdir -p /home/runner/.ssh
-          ls /home/runner/.ssh
-          touch /home/runner/.ssh/known_hosts
-           
-          chmod 700 /home/runner/ssh_key
-          ssh -o StrictHostKeyChecking=no -o  -i ~/ssh_key ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
-            docker pull ${{ secrets.DOCKER_USERNAME }}/mono-backend:${{ github.sha }}
-            docker stop backend || true
-            docker rm backend || true
-            docker run -d --name backend -p 4040:8080 ${{ secrets.DOCKER_USERNAME }}/mono-backend:${{ github.sha }}
-          EOF
-      
