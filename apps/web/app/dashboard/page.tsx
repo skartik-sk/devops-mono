@@ -8,7 +8,7 @@ import { AddLinkButton } from "@/components/add-link-button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { BarChart3, BookmarkPlus, Tags, TrendingUp } from "lucide-react"
-import { Link } from "@/lib/types"
+import { Link } from "../../lib/types"
 
 export default function DashboardPage() {
   const [searchQuery, setSearchQuery] = useState("")
