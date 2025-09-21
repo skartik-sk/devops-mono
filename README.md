@@ -1,138 +1,419 @@
-# Turborepo starter
+# LinkVault - Developer's Bookmark Manager
 
-This Turborepo starter is maintained by the Turborepo core team.
+A modern, full-stack web application for developers to save, organize, and search valuable links, articles, and code snippets. Built with a production-ready DevOps architecture.
 
-## Using this example
+## 🏗️ DevOps Architecture Overview
 
-Run the following command:
+This project showcases a complete DevOps implementation with:
 
-```sh
-npx create-turbo@latest
-```
+- **Containerization**: Multi-stage Docker builds for optimized deployment
+- **Orchestration**: Docker Compose for local development
+- **CI/CD Pipeline**: GitHub Actions for automated testing and deployment
+- **Infrastructure**: AWS EC2 with Nginx reverse proxy
+- **Database**: PostgreSQL with Prisma ORM and automated migrations
+- **Monitoring**: Health checks and logging
+- **Security**: Environment variable management and secure configurations
 
-## What's inside?
+## 🚀 Tech Stack
 
-This Turborepo includes the following packages/apps:
+### Backend
+- **Runtime**: Bun (JavaScript runtime)
+- **Framework**: Custom HTTP server with Bun.serve()
+- **Database**: PostgreSQL with Prisma ORM
+- **API**: RESTful API with JSON responses
 
-### Apps and Packages
+### Frontend
+- **Framework**: Next.js 15 with App Router
+- **UI Components**: Tailwind CSS + Radix UI primitives
+- **State Management**: React hooks
+- **Styling**: Tailwind CSS with CSS variables for theming
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+### DevOps Tools
+- **Containerization**: Docker & Docker Compose
+- **CI/CD**: GitHub Actions
+- **Infrastructure**: AWS EC2, Nginx
+- **Database**: PostgreSQL (Neon hosting)
+- **Package Manager**: Bun
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
-```
-
-You can build a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+## 📁 Project Structure
 
 ```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
+├── apps/
+│   ├── backend/           # Bun.js backend server
+│   │   ├── index.ts       # Main API server
+│   │   └── package.json
+│   ├── web/              # Next.js frontend
+│   │   ├── app/          # Next.js app router
+│   │   ├── components/   # React components
+│   │   └── lib/          # Utility functions
+│   └── socket/           # WebSocket server
+├── packages/
+│   ├── db/               # Database package
+│   │   ├── prisma/       # Database schema
+│   │   └── migrations/   # Database migrations
+│   ├── ui/               # Shared UI components
+│   ├── eslint-config/    # ESLint configuration
+│   └── typescript-config/ # TypeScript configuration
+├── docker/               # Docker configuration
+│   ├── Dockerfile.backend
+│   ├── Dockerfile.frontend
+│   └── Dockerfile.ws
+└── .github/workflows/    # CI/CD pipelines
 ```
 
-### Develop
+## 🐳 Docker Configuration
 
-To develop all apps and packages, run the following command:
+### Multi-stage Builds
 
-```
-cd my-turborepo
+Each service uses optimized multi-stage Docker builds:
 
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev
+#### Backend Dockerfile
+```dockerfile
+# Build stage
+FROM oven/bun:latest as builder
+WORKDIR /app
+COPY package.json bun.lockb ./
+RUN bun install --frozen-lockfile
+COPY . .
+RUN bun build
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
-```
-
-You can develop a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
-
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
+# Production stage
+FROM oven/bun:slim
+WORKDIR /app
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/index.ts ./
+EXPOSE 8080
+CMD ["bun", "run", "index.ts"]
 ```
 
-### Remote Caching
+#### Frontend Dockerfile
+```dockerfile
+# Build stage
+FROM node:18-alpine as builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
+# Production stage
+FROM nginx:alpine
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+COPY nginx.conf /etc/nginx/nginx.conf
+EXPOSE 3000
 ```
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+### Docker Compose
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+Local development orchestration:
 
+```yaml
+version: '3.8'
+services:
+  backend:
+    build: ./docker/Dockerfile.backend
+    ports:
+      - "8080:8080"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+    depends_on:
+      - postgres
+
+  frontend:
+    build: ./docker/Dockerfile.frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+  postgres:
+    image: postgres:15
+    environment:
+      - POSTGRES_DB=linkvault
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
 ```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
+## 🔌 API Endpoints
+
+### Links Management
+- `GET /api/links` - Fetch all links (with optional search)
+- `POST /api/links` - Create a new link
+- `PUT /api/links/[id]` - Update an existing link
+- `DELETE /api/links/[id]` - Delete a link
+
+### Search Functionality
+```bash
+# Search links by title, description, or tags
+GET /api/links?search=react
+
+# Get all links
+GET /api/links
 ```
 
-## Useful Links
+## 🗄️ Database Schema
 
-Learn more about the power of Turborepo:
+### Links Table
+```sql
+CREATE TABLE links (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    url TEXT NOT NULL,
+    description TEXT,
+    tags TEXT[],
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
 
-- [Tasks](https://turborepo.com/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.com/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.com/docs/reference/configuration)
-- [CLI Usage](https://turborepo.com/docs/reference/command-line-reference)
-# devops-mono
-# devops-mono
-# devops-mono
+### Automated Triggers
+```sql
+-- Auto-update updated_at timestamp
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+   NEW.updated_at = NOW();
+   RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+CREATE TRIGGER update_links_updated_at
+BEFORE UPDATE ON links
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
+```
+
+## 🚀 Deployment Architecture
+
+### AWS EC2 Setup
+1. **Instance**: Ubuntu 22.04 LTS
+2. **Security Groups**: HTTP (80, 443), SSH (22)
+3. **Storage**: 30GB SSD
+4. **Monitoring**: CloudWatch integration
+
+### Nginx Configuration
+```nginx
+server {
+    listen 80;
+    server_name devops.skartik.xyz;
+
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+
+    location /api/ {
+        proxy_pass http://localhost:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+```
+
+## 🔄 CI/CD Pipeline
+
+### GitHub Actions Workflow
+
+```yaml
+name: Deploy to Production
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+      - name: Install dependencies
+        run: bun install
+      - name: Run tests
+        run: bun test
+
+  build-and-deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build Docker images
+        run: |
+          docker build -f docker/Dockerfile.backend -t linkvault-backend .
+          docker build -f docker/Dockerfile.frontend -t linkvault-frontend .
+      - name: Deploy to AWS
+        run: |
+          # Deploy script here
+```
+
+## 📊 Monitoring & Logging
+
+### Health Checks
+- Backend: `GET /` - Returns server status
+- Database: Prisma connection health checks
+- Frontend: Next.js health endpoints
+
+### Logging Strategy
+- Structured logging with timestamps
+- Environment-specific log levels
+- Docker container logs aggregation
+- AWS CloudWatch integration
+
+## 🔒 Security Considerations
+
+### Environment Variables
+- Database credentials in environment variables
+- API keys and secrets not committed to repo
+- Different configs for development/production
+
+### Security Best Practices
+- Multi-stage Docker builds for minimal attack surface
+- Non-root user in containers
+- Regular dependency updates
+- HTTPS enforcement in production
+
+## 🎯 Features
+
+### Core Functionality
+- ✅ Create, read, update, delete links
+- ✅ Search by title, description, and tags
+- ✅ Tag-based organization
+- ✅ Responsive design for all devices
+- ✅ Real-time search with debouncing
+- ✅ Modal forms for link management
+
+### User Experience
+- 🎨 Modern, clean interface
+- 📱 Mobile-responsive design
+- ⚡ Fast search and filtering
+- 🏷️ Tag-based organization
+- 🔄 Real-time updates
+- 📋 Copy-friendly link display
+
+## 🛠️ Development Setup
+
+### Prerequisites
+- Bun runtime
+- Docker & Docker Compose
+- Node.js 18+
+- PostgreSQL (or Neon account)
+
+### Local Development
+```bash
+# Clone repository
+git clone <repository-url>
+cd devops-monorepo
+
+# Install dependencies
+bun install
+
+# Set up database
+cp packages/db/.env.example packages/db/.env
+bunx prisma migrate dev
+
+# Start development servers
+bun run dev:backend
+bun run dev:frontend
+```
+
+### Docker Development
+```bash
+# Start all services
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
+```
+
+## 📈 Performance Optimization
+
+### Backend
+- Connection pooling with Prisma
+- Database indexing on search fields
+- GIN indexes for array operations
+- Efficient query patterns
+
+### Frontend
+- Next.js static site generation
+- Image optimization
+- Code splitting
+- Caching strategies
+
+### Infrastructure
+- Nginx caching
+- CDN for static assets
+- Database connection pooling
+- Load balancing ready
+
+## 🚀 Production Deployment
+
+### Deployment Script
+```bash
+#!/bin/bash
+
+# Build Docker images
+docker build -f docker/Dockerfile.backend -t linkvault-backend:latest .
+docker build -f docker/Dockerfile.frontend -t linkvault-frontend:latest .
+
+# Deploy to AWS
+docker save linkvault-backend:latest | ssh user@server docker load
+docker save linkvault-frontend:latest | ssh user@server docker load
+
+# Restart services
+ssh user@server 'docker-compose up -d'
+```
+
+### Domain Configuration
+- DNS A record pointing to EC2 instance
+- SSL certificate with Let's Encrypt
+- Nginx configuration for HTTPS
+
+## 🔄 Maintenance
+
+### Database Maintenance
+- Regular backups
+- Index optimization
+- Query performance monitoring
+- Schema migrations
+
+### Application Updates
+- Zero-downtime deployments
+- Rolling updates
+- Health checks during deployment
+- Automated rollback on failure
+
+## 📚 Documentation
+
+- API documentation available at `/api/docs`
+- Component documentation in source code
+- Architecture diagrams in `/docs`
+- Deployment guides in `/docs/deployment`
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests
+5. Submit a pull request
+
+## 📄 License
+
+This project is licensed under the MIT License.
+
+---
+
+**Built with ❤️ using modern DevOps practices**
+
+For more information about the implementation details, check out the source code and documentation in each service directory.
