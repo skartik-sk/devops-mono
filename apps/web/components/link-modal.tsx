@@ -17,11 +17,10 @@ import { Link } from "@/lib/types"
 interface LinkModalProps {
   isOpen: boolean
   onClose: () => void
-  onSave: (linkData: Partial<Link>) => void
   link?: Link | null
 }
 
-export function LinkModal({ isOpen, onClose, onSave, link }: LinkModalProps) {
+export function LinkModal({ isOpen, onClose, link }: LinkModalProps) {
   const [formData, setFormData] = useState({
     title: link?.title || "",
     url: link?.url || "",
@@ -29,7 +28,7 @@ export function LinkModal({ isOpen, onClose, onSave, link }: LinkModalProps) {
     tags: link?.tags?.join(", ") || ""
   })
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     const tags = formData.tags
@@ -37,12 +36,37 @@ export function LinkModal({ isOpen, onClose, onSave, link }: LinkModalProps) {
       .map(tag => tag.trim())
       .filter(tag => tag.length > 0)
 
-    onSave({
+    const linkData = {
       title: formData.title,
       url: formData.url,
       description: formData.description || undefined,
       tags: tags.length > 0 ? tags : undefined
-    })
+    }
+
+    try {
+      const url = link
+        ? `/api/links/${link.id}`
+        : '/api/links'
+
+      const method = link ? 'PUT' : 'POST'
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(linkData),
+      })
+
+      if (response.ok) {
+        onClose()
+        window.location.reload()
+      } else {
+        console.error('Failed to save link')
+      }
+    } catch (error) {
+      console.error('Error saving link:', error)
+    }
   }
 
   const handleInputChange = (field: string, value: string) => {

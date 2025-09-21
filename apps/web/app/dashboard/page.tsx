@@ -1,6 +1,6 @@
-"use client"
+'use client'
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { SearchBar } from "@/components/search-bar"
 import { LinkGrid } from "@/components/link-grid"
 import { LinkModal } from "@/components/link-modal"
@@ -8,93 +8,77 @@ import { AddLinkButton } from "@/components/add-link-button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { BarChart3, BookmarkPlus, Tags, TrendingUp } from "lucide-react"
-
-// Mock data for demonstration
-const mockLinks = [
-  {
-    id: "1",
-    title: "Next.js Documentation",
-    url: "https://nextjs.org/docs",
-    description: "The official Next.js documentation with guides, API reference, and examples.",
-    tags: ["nextjs", "react", "documentation"],
-    favicon: "/nextjs-logo.jpg",
-    createdAt: "2024-01-15",
-    category: "Development",
-  },
-  {
-    id: "2",
-    title: "Tailwind CSS Components",
-    url: "https://tailwindui.com",
-    description: "Beautiful UI components built with Tailwind CSS.",
-    tags: ["tailwind", "css", "components"],
-    favicon: "/tailwind-logo.jpg",
-    createdAt: "2024-01-14",
-    category: "Design",
-  },
-  {
-    id: "3",
-    title: "TypeScript Handbook",
-    url: "https://www.typescriptlang.org/docs/",
-    description: "Learn TypeScript from the ground up with comprehensive guides.",
-    tags: ["typescript", "javascript", "programming"],
-    favicon: "/typescript-logo.jpg",
-    createdAt: "2024-01-13",
-    category: "Development",
-  },
-  {
-    id: "4",
-    title: "Figma Design System",
-    url: "https://www.figma.com/design-systems/",
-    description: "Best practices for creating and maintaining design systems in Figma.",
-    tags: ["figma", "design-system", "ui-ux"],
-    favicon: "/figma-logo.jpg",
-    createdAt: "2024-01-12",
-    category: "Design",
-  },
-  {
-    id: "5",
-    title: "React Patterns",
-    url: "https://reactpatterns.com",
-    description: "Common React patterns and best practices for building scalable applications.",
-    tags: ["react", "patterns", "best-practices"],
-    favicon: "/react-logo.jpg",
-    createdAt: "2024-01-11",
-    category: "Development",
-  },
-  {
-    id: "6",
-    title: "CSS Grid Generator",
-    url: "https://cssgrid-generator.netlify.app",
-    description: "Interactive tool to generate CSS Grid layouts with visual interface.",
-    tags: ["css", "grid", "tool"],
-    favicon: "/css-logo.jpg",
-    createdAt: "2024-01-10",
-    category: "Tools",
-  },
-]
+import { Link } from "@/lib/types"
 
 export default function DashboardPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("All")
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [selectedLink, setSelectedLink] = useState(null)
+  const [selectedLink, setSelectedLink] = useState<Link | null>(null)
+  const [links, setLinks] = useState<Link[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
   const categories = ["All", "Development", "Design", "Tools", "Research"]
 
-  const filteredLinks = mockLinks.filter((link) => {
+  const filteredLinks = links.filter((link) => {
     const matchesSearch =
       link.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      link.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      link.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+      (link.description && link.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (link.tags && link.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase())))
 
-    const matchesCategory = selectedCategory === "All" || link.category === selectedCategory
+    // Simple category detection based on tags and description
+    const linkCategory = link.tags?.[0] || "Other"
+    const matchesCategory = selectedCategory === "All" || linkCategory.toLowerCase() === selectedCategory.toLowerCase()
 
     return matchesSearch && matchesCategory
   })
 
-  const handleLinkClick = (link) => {
+  const fetchLinks = async (search = "") => {
+    try {
+      setIsLoading(true)
+      const url = search ? `/api/links?search=${encodeURIComponent(search)}` : '/api/links'
+      const response = await fetch(url)
+      if (response.ok) {
+        const data = await response.json()
+        setLinks(data)
+      }
+    } catch (error) {
+      console.error('Error fetching links:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchLinks()
+  }, [])
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      fetchLinks(searchQuery)
+    }, 300)
+
+    return () => clearTimeout(timeoutId)
+  }, [searchQuery])
+
+  const handleLinkEdit = (link: Link) => {
     setSelectedLink(link)
     setIsModalOpen(true)
+  }
+
+  const handleLinkDelete = async (id: number) => {
+    if (confirm('Are you sure you want to delete this link?')) {
+      try {
+        const response = await fetch(`/api/links/${id}`, {
+          method: 'DELETE',
+        })
+        if (response.ok) {
+          setLinks(links.filter(link => link.id !== id))
+        }
+      } catch (error) {
+        console.error('Error deleting link:', error)
+      }
+    }
   }
 
   const handleAddLink = () => {
@@ -102,20 +86,23 @@ export default function DashboardPage() {
     setIsModalOpen(true)
   }
 
-  const totalLinks = mockLinks.length
-  const recentLinks = mockLinks.filter((link) => {
+  const totalLinks = links.length
+  const recentLinks = links.filter((link) => {
     const linkDate = new Date(link.createdAt)
     const weekAgo = new Date()
     weekAgo.setDate(weekAgo.getDate() - 7)
     return linkDate >= weekAgo
   }).length
 
-  const allTags = mockLinks.flatMap((link) => link.tags)
+  const allTags = links.flatMap((link) => link.tags || [])
   const uniqueTags = [...new Set(allTags)].length
 
   const categoryStats = categories.slice(1).map((category) => ({
     name: category,
-    count: mockLinks.filter((link) => link.category === category).length,
+    count: links.filter((link) => {
+      const linkCategory = link.tags?.[0] || "Other"
+      return linkCategory.toLowerCase() === category.toLowerCase()
+    }).length,
   }))
 
   return (
@@ -206,7 +193,12 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <LinkGrid links={filteredLinks} onLinkClick={handleLinkClick} />
+      <LinkGrid
+        links={filteredLinks}
+        onEdit={handleLinkEdit}
+        onDelete={handleLinkDelete}
+        isLoading={isLoading}
+      />
 
       <AddLinkButton onClick={handleAddLink} />
 
