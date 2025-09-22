@@ -58,7 +58,8 @@ const server = Bun.serve({
 
     // Health check
     if (url.pathname === '/') {
-      return createTextResponse('LinkVault API Server is running!')
+
+      return createTextResponse(`LinkVault API Server is running! ${Date.now().toString()}`)
     }
 
     // Links API endpoints
