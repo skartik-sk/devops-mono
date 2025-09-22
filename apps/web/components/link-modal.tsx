@@ -14,7 +14,8 @@ import { Input } from "./ui/input"
 import { Textarea } from "./ui/textarea"
 import { Label } from "./ui/label"
 import { Switch } from "./ui/switch"
-import { Link } from "../lib/types"
+import { getApiUrl, getUserApiUrl } from "../../lib/api-config";
+import { Link } from "../../lib/types"
 
 interface LinkModalProps {
   isOpen: boolean
@@ -41,7 +42,7 @@ export function LinkModal({ isOpen, onClose, link }: LinkModalProps) {
 
   const fetchCollections = async () => {
     try {
-      const response = await fetch('http://localhost:8080/api/collections')
+      const response = await fetch(getApiUrl("collections"))
       if (response.ok) {
         const data = await response.json()
         setCollections(data)
@@ -70,8 +71,8 @@ export function LinkModal({ isOpen, onClose, link }: LinkModalProps) {
 
     try {
       const url = link
-        ? `http://localhost:8080/api/links/${link.id}`
-        : 'http://localhost:8080/api/links'
+        ? getApiUrl("links", link.id.toString())
+        : getApiUrl("links")
 
       const method = link ? 'PUT' : 'POST'
 

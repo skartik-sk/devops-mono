@@ -7,6 +7,7 @@ import { Badge } from "../../components/ui/badge"
 import { Input } from "../../components/ui/input"
 import { SearchBar } from "../../src/components/search-bar"
 import { ExternalLink, Clock, Trash2, Heart, FolderOpen, Tag as TagIcon } from "lucide-react"
+import { getUserApiUrl } from "../../lib/api-config"
 
 interface SavedLink {
   id: number
@@ -62,7 +63,7 @@ export default function SavedPage() {
 
     try {
       setLoading(true)
-      const response = await fetch(`http://localhost:8080/api/users/${currentUser.id}/saved-links`)
+      const response = await fetch(getUserApiUrl(currentUser.id, "saved-links"))
       if (response.ok) {
         const data = await response.json()
         setSavedLinks(data)
@@ -78,7 +79,7 @@ export default function SavedPage() {
     if (!currentUser) return
 
     try {
-      const response = await fetch(`http://localhost:8080/api/users/${currentUser.id}/saved-links`, {
+      const response = await fetch(getUserApiUrl(currentUser.id, "saved-links"), {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ linkId })

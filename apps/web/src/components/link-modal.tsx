@@ -116,7 +116,7 @@ export function LinkModal({ isOpen, onClose, link }: LinkModalProps) {
     if (formData.title.trim() && formData.url.trim()) {
       try {
         const isEditing = !!link
-        const url = isEditing ? `http://localhost:8080/api/links/${link.id}` : 'http://localhost:8080/api/links'
+        const url = isEditing ? getApiUrl("links", link.id.toString()) : getApiUrl("links")
         const method = isEditing ? 'PUT' : 'POST'
 
         const response = await fetch(url, {
@@ -172,7 +172,7 @@ export function LinkModal({ isOpen, onClose, link }: LinkModalProps) {
   const handleDelete = async () => {
     if (link && confirm('Are you sure you want to delete this link?')) {
       try {
-        const response = await fetch(`http://localhost:8080/api/links/${link.id}`, {
+        const response = await fetch(getApiUrl("links", link.id.toString()), {
           method: 'DELETE',
         })
 

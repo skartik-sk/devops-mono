@@ -5,7 +5,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     const body = await request.json()
     const { id } = params
 
-    const response = await fetch(`http://localhost:8080/api/links/${id}`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://linkvault.skartik.xyz'}/api/links/${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -26,7 +26,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
   try {
     const { id } = params
 
-    const response = await fetch(`http://localhost:8080/api/links/${id}`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://linkvault.skartik.xyz'}/api/links/${id}`, {
       method: 'DELETE',
     })
 

@@ -10,6 +10,7 @@ import { Textarea } from "../../components/ui/textarea"
 import { Label } from "../../components/ui/label"
 import { Plus, FolderOpen, LinkIcon, Calendar, MoreVertical, Edit, Trash2 } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../../src/components/ui/dropdown-menu"
+import { API_BASE_URL } from "../../lib/api-config"
 
 interface Collection {
   id: number
@@ -56,7 +57,7 @@ export default function CollectionsPage() {
 
   const fetchCollections = async () => {
     try {
-      const response = await fetch('http://localhost:8080/api/collections')
+      const response = await fetch(getApiUrl("collections"))
       if (response.ok) {
         const data = await response.json()
         setCollections(data)
@@ -71,7 +72,7 @@ export default function CollectionsPage() {
   const handleCreateCollection = async () => {
     if (newCollection.name.trim()) {
       try {
-        const response = await fetch('http://localhost:8080/api/collections', {
+        const response = await fetch(getApiUrl("collections"), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -95,7 +96,7 @@ export default function CollectionsPage() {
 
   const handleViewCollection = async (collection: Collection) => {
     try {
-      const response = await fetch(`http://localhost:8080/api/links?collectionId=${collection.id}`)
+      const response = await fetch(`${API_BASE_URL}/api/links?collectionId=${collection.id}`)
       if (response.ok) {
         const links = await response.json()
         setSelectedCollection({
@@ -111,7 +112,7 @@ export default function CollectionsPage() {
 
   const handleDeleteCollection = async (collectionId: number) => {
     try {
-      const response = await fetch(`http://localhost:8080/api/collections/${collectionId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/collections/${collectionId}`, {
         method: 'DELETE'
       })
       if (response.ok) {

@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getApiUrl } from '../../../lib/api-config'
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const search = searchParams.get('search') || ''
 
-    const backendUrl = new URL('http://localhost:8080/api/links')
+    const backendUrl = new URL(getApiUrl("links"))
     if (search) {
       backendUrl.searchParams.set('search', search)
     }
@@ -24,7 +25,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
 
-    const response = await fetch('http://localhost:8080/api/links', {
+    const response = await fetch(getApiUrl("links"), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

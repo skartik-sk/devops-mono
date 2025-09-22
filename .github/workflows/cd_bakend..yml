@@ -40,7 +40,7 @@ jobs:
             sudo docker pull ${{ secrets.DOCKER_USERNAME }}/mono-backend:${{ github.sha }}
             sudo docker stop backend || true
             sudo docker rm backend || true
-            sudo docker run -d --name backend -p 4040:8080 -e DATABASE_URL="${{ secrets.DATABASE_URL }}" ${{ secrets.DOCKER_USERNAME }}/mono-backend:${{ github.sha }}
+            sudo docker run -d --name backend -p 4040:8080 -e DATABASE_URL="${{ secrets.DATABASE_URL }}" -e NODE_ENV=production ${{ secrets.DOCKER_USERNAME }}/mono-backend:${{ github.sha }}
             sudo docker images --format "{{.Repository}}:{{.Tag}} {{.ID}}" | grep "mono-backend" | grep -v "${{ github.sha }}" | awk '{print $2}' | xargs sudo docker rmi -f || true
         
 

@@ -11,6 +11,7 @@ import { Switch } from "../../components/ui/switch"
 import { Separator } from "../../components/ui/separator"
 import { Avatar, AvatarFallback, AvatarImage } from "../../components/ui/avatar"
 import { User, Mail, Calendar, Settings, Bell, Shield, Download, Upload, Trash2, Eye, EyeOff, Save } from "lucide-react"
+import { API_BASE_URL } from "../../lib/api-config"
 
 interface UserStats {
   totalLinks: number
@@ -71,7 +72,7 @@ export default function ProfilePage() {
           isPublic: true,
         }
 
-        const response = await fetch('http://localhost:8080/api/users', {
+        const response = await fetch(getApiUrl("users"), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(newUser)
@@ -85,7 +86,7 @@ export default function ProfilePage() {
       } else {
         // Verify user exists in backend
         const userData = JSON.parse(user)
-        const response = await fetch(`http://localhost:8080/api/users/${userData.id}`)
+        const response = await fetch(getApiUrl("users", userData.id))
 
         if (response.ok) {
           const backendUser = await response.json()
@@ -93,7 +94,7 @@ export default function ProfilePage() {
           localStorage.setItem('currentUser', JSON.stringify(backendUser))
         } else {
           // User doesn't exist in backend, create them
-          const createResponse = await fetch('http://localhost:8080/api/users', {
+          const createResponse = await fetch(getApiUrl("users"), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(userData)
@@ -116,7 +117,7 @@ export default function ProfilePage() {
 
     try {
       setLoading(true)
-      const response = await fetch(`http://localhost:8080/api/users/${currentUser.id}/saved-links`)
+      const response = await fetch(`${API_BASE_URL}/api/users/${currentUser.id}/saved-links`)
       if (response.ok) {
         const data = await response.json()
         setSavedLinks(data)
@@ -160,7 +161,7 @@ export default function ProfilePage() {
     if (!currentUser) return
 
     try {
-      const response = await fetch(`http://localhost:8080/api/users/${currentUser.id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/users/${currentUser.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -184,7 +185,7 @@ export default function ProfilePage() {
     if (!currentUser) return
 
     try {
-      const response = await fetch(`http://localhost:8080/api/users/${currentUser.id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/users/${currentUser.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ [key]: value })

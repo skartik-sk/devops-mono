@@ -17,6 +17,7 @@ import {
   Menu,
   X
 } from "lucide-react"
+import { API_BASE_URL } from "../lib/api-config"
 
 export function MainNav() {
   const [currentUser, setCurrentUser] = useState<any>(null)
@@ -35,7 +36,7 @@ export function MainNav() {
         const userData = JSON.parse(user)
         setCurrentUser(userData)
 
-        const savedResponse = await fetch(`http://localhost:8080/api/users/${userData.id}/saved-links`)
+        const savedResponse = await fetch(`${API_BASE_URL}/api/users/${userData.id}/saved-links`)
         if (savedResponse.ok) {
           const savedLinks = await savedResponse.json()
           setSavedCount(savedLinks.length)

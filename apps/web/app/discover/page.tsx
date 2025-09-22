@@ -7,6 +7,7 @@ import { Badge } from "../../components/ui/badge"
 import { Input } from "../../components/ui/input"
 import { SearchBar } from "../../src/components/search-bar"
 import { ExternalLink, Globe, Clock, User, BookmarkPlus, Heart, Share2 } from "lucide-react"
+import { API_BASE_URL } from "../../lib/api-config"
 
 interface PublicLink {
   id: number
@@ -76,7 +77,7 @@ export default function DiscoverPage() {
       const userData = JSON.parse(user)
       setCurrentUser(userData)
 
-      const savedResponse = await fetch(`http://localhost:8080/api/users/${userData.id}/saved-links`)
+      const savedResponse = await fetch(`${API_BASE_URL}/api/users/${userData.id}/saved-links`)
       if (savedResponse.ok) {
         const savedLinks = await savedResponse.json()
         setSavedLinkIds(new Set(savedLinks.map((sl: any) => sl.linkId)))
@@ -90,7 +91,7 @@ export default function DiscoverPage() {
     try {
       setLoading(true)
       const searchParam = searchQuery.trim() ? `&search=${encodeURIComponent(searchQuery)}` : ''
-      const response = await fetch(`http://localhost:8080/api/public/links?page=${currentPage}&limit=12${searchParam}`)
+      const response = await fetch(`${API_BASE_URL}/api/public/links?page=${currentPage}&limit=12${searchParam}`)
       if (response.ok) {
         const data = await response.json()
         setLinks(data.links)
@@ -107,7 +108,7 @@ export default function DiscoverPage() {
     if (!currentUser) return
 
     try {
-      const response = await fetch(`http://localhost:8080/api/users/${currentUser.id}/saved-links`, {
+      const response = await fetch(`${API_BASE_URL}/api/users/${currentUser.id}/saved-links`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ linkId })
@@ -125,7 +126,7 @@ export default function DiscoverPage() {
     if (!currentUser) return
 
     try {
-      const response = await fetch(`http://localhost:8080/api/users/${currentUser.id}/saved-links`, {
+      const response = await fetch(`${API_BASE_URL}/api/users/${currentUser.id}/saved-links`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ linkId })

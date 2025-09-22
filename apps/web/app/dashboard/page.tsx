@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/ca
 import { Badge } from "../../components/ui/badge"
 import { BarChart3, BookmarkPlus, Tags, TrendingUp } from "lucide-react"
 import { Link } from "../../lib/types"
+import { getApiUrl } from "../../lib/api-config"
 
 export default function DashboardPage() {
   const [searchQuery, setSearchQuery] = useState("")
@@ -36,7 +37,8 @@ export default function DashboardPage() {
   const fetchLinks = async (search = "") => {
     try {
       setIsLoading(true)
-      const url = search ? `http://localhost:8080/api/links?search=${encodeURIComponent(search)}` : 'http://localhost:8080/api/links'
+      const baseUrl = getApiUrl('links')
+      const url = search ? `${baseUrl}?search=${encodeURIComponent(search)}` : baseUrl
       const response = await fetch(url)
       if (response.ok) {
         const data = await response.json()
@@ -69,7 +71,7 @@ export default function DashboardPage() {
   const handleLinkDelete = async (id: number) => {
     if (confirm('Are you sure you want to delete this link?')) {
       try {
-        const response = await fetch(`http://localhost:8080/api/links/${id}`, {
+        const response = await fetch(getApiUrl('links', id.toString()), {
           method: 'DELETE',
         })
         if (response.ok) {

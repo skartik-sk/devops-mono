@@ -41,7 +41,7 @@ export default function TagsPage() {
 
   const fetchTags = async () => {
     try {
-      const response = await fetch('http://localhost:8080/api/links')
+      const response = await fetch(getApiUrl("links"))
       if (response.ok) {
         const links = await response.json()
         const tagMap = new Map<string, TagData>()
