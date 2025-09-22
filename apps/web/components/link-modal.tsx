@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
   Dialog,
   DialogContent,
@@ -8,11 +8,13 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Link } from "@/lib/types"
+} from "./ui/dialog"
+import { Button } from "./ui/button"
+import { Input } from "./ui/input"
+import { Textarea } from "./ui/textarea"
+import { Label } from "./ui/label"
+import { Switch } from "./ui/switch"
+import { Link } from "../lib/types"
 
 interface LinkModalProps {
   isOpen: boolean
@@ -25,8 +27,29 @@ export function LinkModal({ isOpen, onClose, link }: LinkModalProps) {
     title: link?.title || "",
     url: link?.url || "",
     description: link?.description || "",
-    tags: link?.tags?.join(", ") || ""
+    tags: link?.tags?.join(", ") || "",
+    isPublic: link?.isPublic || false,
+    collectionId: link?.collectionId || ""
   })
+  const [collections, setCollections] = useState<any[]>([])
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchCollections()
+    }
+  }, [isOpen])
+
+  const fetchCollections = async () => {
+    try {
+      const response = await fetch('http://localhost:8080/api/collections')
+      if (response.ok) {
+        const data = await response.json()
+        setCollections(data)
+      }
+    } catch (error) {
+      console.error('Error fetching collections:', error)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -40,13 +63,15 @@ export function LinkModal({ isOpen, onClose, link }: LinkModalProps) {
       title: formData.title,
       url: formData.url,
       description: formData.description || undefined,
-      tags: tags.length > 0 ? tags : undefined
+      tags: tags.length > 0 ? tags : undefined,
+      isPublic: formData.isPublic,
+      collectionId: formData.collectionId ? parseInt(formData.collectionId) : undefined
     }
 
     try {
       const url = link
-        ? `/api/links/${link.id}`
-        : '/api/links'
+        ? `http://localhost:8080/api/links/${link.id}`
+        : 'http://localhost:8080/api/links'
 
       const method = link ? 'PUT' : 'POST'
 
@@ -69,7 +94,7 @@ export function LinkModal({ isOpen, onClose, link }: LinkModalProps) {
     }
   }
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
@@ -139,6 +164,39 @@ export function LinkModal({ isOpen, onClose, link }: LinkModalProps) {
               onChange={(e) => handleInputChange("tags", e.target.value)}
               placeholder="react, tutorial, css (comma separated)"
             />
+          </div>
+
+          {collections.length > 0 && (
+            <div className="space-y-2">
+              <Label htmlFor="collection">Collection (Optional)</Label>
+              <select
+                id="collection"
+                value={formData.collectionId}
+                onChange={(e) => handleInputChange("collectionId", e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-md"
+              >
+                <option value="">No Collection</option>
+                {collections.map((collection) => (
+                  <option key={collection.id} value={collection.id.toString()}>
+                    {collection.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <div className="space-y-2">
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="isPublic"
+                checked={formData.isPublic}
+                onCheckedChange={(checked) => handleInputChange("isPublic", checked)}
+              />
+              <Label htmlFor="isPublic">Make this link public</Label>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Public links can be discovered and saved by other users
+            </p>
           </div>
 
           <DialogFooter>

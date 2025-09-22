@@ -20,6 +20,44 @@ model Link {
   url         String   @db.Text
   description String?  @db.Text
   tags        String[]
+  isPublic    Boolean  @default(false)
   createdAt   DateTime @default(now()) @db.Timestamptz
-  updatedAt   DateTime @default(now()) @db.Timestamptz
+  updatedAt   DateTime @db.Timestamptz
+  collectionId Int?
+  collection  Collection? @relation(fields: [collectionId], references: [id])
+  savedBy     SavedLink[]
+}
+
+model Collection {
+  id          Int      @id @default(autoincrement())
+  name        String   @db.VarChar(255)
+  description String?  @db.Text
+  color       String   @default("bg-blue-500") @db.VarChar(50)
+  isPublic    Boolean  @default(false)
+  createdAt   DateTime @default(now()) @db.Timestamptz
+  updatedAt   DateTime @db.Timestamptz
+  links       Link[]
+}
+
+model SavedLink {
+  id          Int      @id @default(autoincrement())
+  userId      String
+  linkId      Int
+  createdAt   DateTime @default(now()) @db.Timestamptz
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  link        Link     @relation(fields: [linkId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, linkId])
+}
+
+model User {
+  id          String   @id @default(cuid())
+  name        String   @db.VarChar(255)
+  email       String?  @db.VarChar(255)
+  avatar      String?  @db.Text
+  bio         String?  @db.Text
+  isPublic    Boolean  @default(true)
+  createdAt   DateTime @default(now()) @db.Timestamptz
+  updatedAt   DateTime @db.Timestamptz
+  savedLinks  SavedLink[]
 }

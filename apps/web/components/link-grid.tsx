@@ -1,7 +1,7 @@
 'use client'
 
 import { LinkCard } from './link-card'
-import { Link } from '@/lib/types'
+import { Link } from '../lib/types'
 
 interface LinkGridProps {
   links: Link[]

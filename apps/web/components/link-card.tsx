@@ -1,9 +1,10 @@
 'use client'
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Edit, Trash2, ExternalLink } from "lucide-react"
-import { Link } from "@/lib/types"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card"
+import { Button } from "./ui/button"
+import { Badge } from "./ui/badge"
+import { Edit, Trash2, ExternalLink, Globe, Lock } from "lucide-react"
+import { Link } from "../lib/types"
 
 interface LinkCardProps {
   link: Link
@@ -25,7 +26,13 @@ export function LinkCard({ link, onEdit, onDelete }: LinkCardProps) {
       <CardHeader>
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <CardTitle className="text-lg">{link.title}</CardTitle>
+            <div className="flex items-center gap-2 mb-2">
+              <CardTitle className="text-lg">{link.title}</CardTitle>
+              <Badge variant={link.isPublic ? "default" : "secondary"} className="text-xs">
+                {link.isPublic ? <Globe className="h-3 w-3 mr-1" /> : <Lock className="h-3 w-3 mr-1" />}
+                {link.isPublic ? "Public" : "Private"}
+              </Badge>
+            </div>
             <CardDescription className="text-xs text-muted-foreground">
               Created on {formatDate(link.createdAt)}
             </CardDescription>
@@ -66,6 +73,13 @@ export function LinkCard({ link, onEdit, onDelete }: LinkCardProps) {
 
           {link.description && (
             <p className="text-sm text-muted-foreground">{link.description}</p>
+          )}
+
+          {link.collection && (
+            <div className="flex items-center gap-2">
+              <div className={`w-3 h-3 rounded-full ${link.collection.color}`} />
+              <span className="text-xs text-muted-foreground">{link.collection.name}</span>
+            </div>
           )}
 
           {link.tags && link.tags.length > 0 && (

@@ -2,25 +2,35 @@
 
 import type React from "react"
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/ui/dialog"
+import { Button } from "../components/ui/button"
+import { Badge } from "../components/ui/badge"
+import { Input } from "../components/ui/input"
+import { Label } from "../components/ui/label"
+import { Textarea } from "../components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select"
 import { ExternalLink, Copy, Edit, Trash2, Calendar, Tag, Plus, X } from "lucide-react"
 import { useState } from "react"
 
 interface Link {
-  id: string
+  id: number
   title: string
   url: string
-  description: string
-  tags: string[]
-  favicon: string
+  description?: string
+  tags?: string[]
+  isPublic: boolean
   createdAt: string
-  category: string
+  updatedAt: string
+  collectionId?: number
+  collection?: {
+    id: number
+    name: string
+    description?: string
+    color: string
+    isPublic: boolean
+    createdAt: string
+    updatedAt: string
+  }
 }
 
 interface LinkModalProps {
@@ -47,9 +57,9 @@ export function LinkModal({ isOpen, onClose, link }: LinkModalProps) {
       setFormData({
         title: link.title,
         url: link.url,
-        description: link.description,
-        category: link.category,
-        tags: [...link.tags],
+        description: link.description || "",
+        category: "Development",
+        tags: link.tags || [],
       })
     } else if (!link) {
       setFormData({
@@ -102,21 +112,47 @@ export function LinkModal({ isOpen, onClose, link }: LinkModalProps) {
     }
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (formData.title.trim() && formData.url.trim()) {
-      // Mock save functionality - in real app would save to database
-      console.log("Saving link:", formData)
+      try {
+        const isEditing = !!link
+        const url = isEditing ? `http://localhost:8080/api/links/${link.id}` : 'http://localhost:8080/api/links'
+        const method = isEditing ? 'PUT' : 'POST'
 
-      // Reset form and close modal
-      setFormData({
-        title: "",
-        url: "",
-        description: "",
-        category: "Development",
-        tags: [],
-      })
-      setIsEditing(false)
-      onClose()
+        const response = await fetch(url, {
+          method,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            title: formData.title.trim(),
+            url: formData.url.trim(),
+            description: formData.description.trim() || undefined,
+            tags: formData.tags,
+            isPublic: false,
+          }),
+        })
+
+        if (response.ok) {
+          // Reset form and close modal
+          setFormData({
+            title: "",
+            url: "",
+            description: "",
+            category: "Development",
+            tags: [],
+          })
+          setIsEditing(false)
+          onClose()
+
+          // Refresh the links list by triggering a page reload
+          window.location.reload()
+        } else {
+          console.error('Failed to save link')
+        }
+      } catch (error) {
+        console.error('Error saving link:', error)
+      }
     }
   }
 
@@ -126,10 +162,30 @@ export function LinkModal({ isOpen, onClose, link }: LinkModalProps) {
       setFormData({
         title: link.title,
         url: link.url,
-        description: link.description,
-        category: link.category,
-        tags: [...link.tags],
+        description: link.description || "",
+        category: "Development",
+        tags: link.tags || [],
       })
+    }
+  }
+
+  const handleDelete = async () => {
+    if (link && confirm('Are you sure you want to delete this link?')) {
+      try {
+        const response = await fetch(`http://localhost:8080/api/links/${link.id}`, {
+          method: 'DELETE',
+        })
+
+        if (response.ok) {
+          setIsEditing(false)
+          onClose()
+          window.location.reload()
+        } else {
+          console.error('Failed to delete link')
+        }
+      } catch (error) {
+        console.error('Error deleting link:', error)
+      }
     }
   }
 
@@ -273,18 +329,20 @@ export function LinkModal({ isOpen, onClose, link }: LinkModalProps) {
       <DialogContent className="sm:max-w-2xl bg-card border-border">
         <DialogHeader>
           <div className="flex items-center gap-3">
-            <img src={link.favicon || "/placeholder.svg"} alt="" className="w-5 h-5 rounded" />
+            <div className="w-5 h-5 rounded bg-muted flex items-center justify-center">
+              <span className="text-xs">🔗</span>
+            </div>
             <DialogTitle className="text-foreground text-lg">{link.title}</DialogTitle>
           </div>
         </DialogHeader>
 
         <div className="space-y-6">
           <div>
-            <p className="text-muted-foreground leading-relaxed">{link.description}</p>
+            <p className="text-muted-foreground leading-relaxed">{link.description || "No description available"}</p>
           </div>
 
           <div className="flex flex-wrap gap-2">
-            {link.tags.map((tag) => (
+            {(link.tags || []).map((tag) => (
               <Badge key={tag} variant="secondary" className="bg-secondary/50 text-secondary-foreground">
                 {tag}
               </Badge>
@@ -295,10 +353,6 @@ export function LinkModal({ isOpen, onClose, link }: LinkModalProps) {
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4" />
               <span>Added {new Date(link.createdAt).toLocaleDateString()}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Tag className="h-4 w-4" />
-              <span>{link.category}</span>
             </div>
           </div>
 
@@ -318,7 +372,7 @@ export function LinkModal({ isOpen, onClose, link }: LinkModalProps) {
                 <Edit className="h-3 w-3 mr-1" />
                 Edit
               </Button>
-              <Button variant="outline" size="sm" className="text-destructive hover:text-destructive bg-transparent">
+              <Button variant="outline" size="sm" onClick={handleDelete} className="text-destructive hover:text-destructive bg-transparent">
                 <Trash2 className="h-3 w-3 mr-1" />
                 Delete
               </Button>

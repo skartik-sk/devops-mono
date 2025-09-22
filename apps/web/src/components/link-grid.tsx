@@ -3,22 +3,34 @@
 import { LinkCard } from "./link-card"
 
 interface Link {
-  id: string
+  id: number
   title: string
   url: string
-  description: string
-  tags: string[]
-  favicon: string
+  description?: string
+  tags?: string[]
+  isPublic: boolean
   createdAt: string
-  category: string
+  updatedAt: string
+  collectionId?: number
+  collection?: {
+    id: number
+    name: string
+    description?: string
+    color: string
+    isPublic: boolean
+    createdAt: string
+    updatedAt: string
+  }
 }
 
 interface LinkGridProps {
   links: Link[]
-  onLinkClick: (link: Link) => void
+  onEdit?: (link: Link) => void
+  onDelete?: (link: Link) => void
+  isLoading?: boolean
 }
 
-export function LinkGrid({ links, onLinkClick }: LinkGridProps) {
+export function LinkGrid({ links, onEdit, onDelete, isLoading }: LinkGridProps) {
   if (links.length === 0) {
     return (
       <div className="text-center py-12">
@@ -31,10 +43,24 @@ export function LinkGrid({ links, onLinkClick }: LinkGridProps) {
     )
   }
 
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {Array.from({ length: 6 }).map((_, index) => (
+          <div key={index} className="h-48 bg-muted animate-pulse rounded-lg" />
+        ))}
+      </div>
+    )
+  }
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {links.map((link) => (
-        <LinkCard key={link.id} link={link} onClick={() => onLinkClick(link)} />
+        <LinkCard
+          key={link.id}
+          link={link}
+          onClick={() => onEdit?.(link)}
+        />
       ))}
     </div>
   )

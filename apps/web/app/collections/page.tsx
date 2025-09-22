@@ -1,71 +1,38 @@
 "use client"
 
-import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
+import { useState, useEffect } from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card"
+import { Button } from "../../components/ui/button"
+import { Badge } from "../../components/ui/badge"
+import { Input } from "../../components/ui/input"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../../components/ui/dialog"
+import { Textarea } from "../../components/ui/textarea"
+import { Label } from "../../components/ui/label"
 import { Plus, FolderOpen, LinkIcon, Calendar, MoreVertical, Edit, Trash2 } from "lucide-react"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../../src/components/ui/dropdown-menu"
 
-// Mock collections data
-const mockCollections = [
-  {
-    id: "1",
-    name: "Frontend Resources",
-    description: "Essential tools and documentation for frontend development",
-    linkCount: 12,
-    createdAt: "2024-01-10",
-    color: "bg-blue-500",
-    links: [
-      { id: "1", title: "Next.js Documentation", url: "https://nextjs.org/docs" },
-      { id: "2", title: "Tailwind CSS", url: "https://tailwindcss.com" },
-      { id: "3", title: "React Patterns", url: "https://reactpatterns.com" },
-    ],
-  },
-  {
-    id: "2",
-    name: "Design Inspiration",
-    description: "Beautiful designs and UI patterns for inspiration",
-    linkCount: 8,
-    createdAt: "2024-01-08",
-    color: "bg-purple-500",
-    links: [
-      { id: "4", title: "Dribbble", url: "https://dribbble.com" },
-      { id: "5", title: "Behance", url: "https://behance.net" },
-    ],
-  },
-  {
-    id: "3",
-    name: "Development Tools",
-    description: "Useful tools and utilities for development workflow",
-    linkCount: 15,
-    createdAt: "2024-01-05",
-    color: "bg-green-500",
-    links: [
-      { id: "6", title: "GitHub", url: "https://github.com" },
-      { id: "7", title: "VS Code", url: "https://code.visualstudio.com" },
-    ],
-  },
-  {
-    id: "4",
-    name: "Learning Resources",
-    description: "Courses, tutorials, and educational content",
-    linkCount: 6,
-    createdAt: "2024-01-03",
-    color: "bg-orange-500",
-    links: [{ id: "8", title: "MDN Web Docs", url: "https://developer.mozilla.org" }],
-  },
-]
+interface Collection {
+  id: number
+  name: string
+  description?: string
+  color: string
+  createdAt: string
+  _count: {
+    links: number
+  }
+  links?: Array<{
+    id: number
+    title: string
+    url: string
+  }>
+}
 
 export default function CollectionsPage() {
-  const [collections, setCollections] = useState(mockCollections)
-  const [selectedCollection, setSelectedCollection] = useState(null)
+  const [collections, setCollections] = useState<Collection[]>([])
+  const [selectedCollection, setSelectedCollection] = useState<Collection | null>(null)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [isViewModalOpen, setIsViewModalOpen] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [newCollection, setNewCollection] = useState({
     name: "",
     description: "",
@@ -83,28 +50,76 @@ export default function CollectionsPage() {
     "bg-teal-500",
   ]
 
-  const handleCreateCollection = () => {
-    if (newCollection.name.trim()) {
-      const collection = {
-        id: Date.now().toString(),
-        ...newCollection,
-        linkCount: 0,
-        createdAt: new Date().toISOString().split("T")[0],
-        links: [],
+  useEffect(() => {
+    fetchCollections()
+  }, [])
+
+  const fetchCollections = async () => {
+    try {
+      const response = await fetch('http://localhost:8080/api/collections')
+      if (response.ok) {
+        const data = await response.json()
+        setCollections(data)
       }
-      setCollections([collection, ...collections])
-      setNewCollection({ name: "", description: "", color: "bg-blue-500" })
-      setIsCreateModalOpen(false)
+    } catch (error) {
+      console.error('Error fetching collections:', error)
+    } finally {
+      setLoading(false)
     }
   }
 
-  const handleViewCollection = (collection) => {
-    setSelectedCollection(collection)
-    setIsViewModalOpen(true)
+  const handleCreateCollection = async () => {
+    if (newCollection.name.trim()) {
+      try {
+        const response = await fetch('http://localhost:8080/api/collections', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            ...newCollection,
+            updatedAt: new Date().toISOString()
+          }),
+        })
+
+        if (response.ok) {
+          await fetchCollections()
+          setNewCollection({ name: "", description: "", color: "bg-blue-500" })
+          setIsCreateModalOpen(false)
+        }
+      } catch (error) {
+        console.error('Error creating collection:', error)
+      }
+    }
   }
 
-  const handleDeleteCollection = (collectionId) => {
-    setCollections(collections.filter((c) => c.id !== collectionId))
+  const handleViewCollection = async (collection: Collection) => {
+    try {
+      const response = await fetch(`http://localhost:8080/api/links?collectionId=${collection.id}`)
+      if (response.ok) {
+        const links = await response.json()
+        setSelectedCollection({
+          ...collection,
+          links
+        })
+        setIsViewModalOpen(true)
+      }
+    } catch (error) {
+      console.error('Error fetching collection links:', error)
+    }
+  }
+
+  const handleDeleteCollection = async (collectionId: number) => {
+    try {
+      const response = await fetch(`http://localhost:8080/api/collections/${collectionId}`, {
+        method: 'DELETE'
+      })
+      if (response.ok) {
+        await fetchCollections()
+      }
+    } catch (error) {
+      console.error('Error deleting collection:', error)
+    }
   }
 
   return (
@@ -180,74 +195,83 @@ export default function CollectionsPage() {
         </Dialog>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {collections.map((collection) => (
-          <Card
-            key={collection.id}
-            className="bg-card border-border hover:shadow-lg transition-shadow cursor-pointer group"
-          >
-            <CardHeader className="pb-3">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  <div className={`w-4 h-4 rounded-full ${collection.color}`} />
-                  <CardTitle className="text-foreground text-lg">{collection.name}</CardTitle>
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading collections...</p>
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {collections.map((collection) => (
+            <Card
+              key={collection.id}
+              className="bg-card border-border hover:shadow-lg transition-shadow cursor-pointer group"
+            >
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-4 h-4 rounded-full ${collection.color}`} />
+                    <CardTitle className="text-foreground text-lg">{collection.name}</CardTitle>
+                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="bg-card border-border">
+                      <DropdownMenuItem className="text-foreground hover:bg-accent">
+                        <Edit className="h-4 w-4 mr-2" />
+                        Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className="text-destructive hover:bg-destructive/10"
+                        onClick={() => handleDeleteCollection(collection.id)}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <MoreVertical className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="bg-card border-border">
-                    <DropdownMenuItem className="text-foreground hover:bg-accent">
-                      <Edit className="h-4 w-4 mr-2" />
-                      Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      className="text-destructive hover:bg-destructive/10"
-                      onClick={() => handleDeleteCollection(collection.id)}
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </CardHeader>
-            <CardContent onClick={() => handleViewCollection(collection)}>
-              <p className="text-muted-foreground text-sm mb-4 line-clamp-2">{collection.description}</p>
+              </CardHeader>
+              <CardContent onClick={() => handleViewCollection(collection)}>
+                <p className="text-muted-foreground text-sm mb-4 line-clamp-2">{collection.description}</p>
 
-              <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
-                <div className="flex items-center gap-1">
-                  <LinkIcon className="h-3 w-3" />
-                  <span>{collection.linkCount} links</span>
+                <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
+                  <div className="flex items-center gap-1">
+                    <LinkIcon className="h-3 w-3" />
+                    <span>{collection._count.links} links</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Calendar className="h-3 w-3" />
+                    <span>{new Date(collection.createdAt).toLocaleDateString()}</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-1">
-                  <Calendar className="h-3 w-3" />
-                  <span>{new Date(collection.createdAt).toLocaleDateString()}</span>
-                </div>
-              </div>
 
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full bg-transparent hover:bg-accent"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  handleViewCollection(collection)
-                }}
-              >
-                <FolderOpen className="h-3 w-3 mr-2" />
-                View Collection
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full bg-transparent hover:bg-accent"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleViewCollection(collection)
+                  }}
+                >
+                  <FolderOpen className="h-3 w-3 mr-2" />
+                  View Collection
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
       {/* Collection View Modal */}
       <Dialog open={isViewModalOpen} onOpenChange={setIsViewModalOpen}>
@@ -272,7 +296,7 @@ export default function CollectionsPage() {
 
               <div className="space-y-3">
                 <h3 className="font-medium text-foreground">Links in this collection</h3>
-                {selectedCollection.links.length > 0 ? (
+                {selectedCollection.links && selectedCollection.links.length > 0 ? (
                   <div className="space-y-2">
                     {selectedCollection.links.map((link) => (
                       <div key={link.id} className="flex items-center gap-3 p-3 bg-secondary/20 rounded-lg">

@@ -1,12 +1,12 @@
 'use client'
 
 import { useState, useEffect } from "react"
-import { SearchBar } from "@/components/search-bar"
-import { LinkGrid } from "@/components/link-grid"
-import { LinkModal } from "@/components/link-modal"
-import { AddLinkButton } from "@/components/add-link-button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { SearchBar } from "../../src/components/search-bar"
+import { LinkGrid } from "../../src/components/link-grid"
+import { LinkModal } from "../../src/components/link-modal"
+import { AddLinkButton } from "../../src/components/add-link-button"
+import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card"
+import { Badge } from "../../components/ui/badge"
 import { BarChart3, BookmarkPlus, Tags, TrendingUp } from "lucide-react"
 import { Link } from "../../lib/types"
 
@@ -21,7 +21,7 @@ export default function DashboardPage() {
   const categories = ["All", "Development", "Design", "Tools", "Research"]
 
   const filteredLinks = links.filter((link) => {
-    const matchesSearch =
+    const matchesSearch = !searchQuery.trim() ||
       link.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (link.description && link.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
       (link.tags && link.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase())))
@@ -36,7 +36,7 @@ export default function DashboardPage() {
   const fetchLinks = async (search = "") => {
     try {
       setIsLoading(true)
-      const url = search ? `/api/links?search=${encodeURIComponent(search)}` : '/api/links'
+      const url = search ? `http://localhost:8080/api/links?search=${encodeURIComponent(search)}` : 'http://localhost:8080/api/links'
       const response = await fetch(url)
       if (response.ok) {
         const data = await response.json()
@@ -69,7 +69,7 @@ export default function DashboardPage() {
   const handleLinkDelete = async (id: number) => {
     if (confirm('Are you sure you want to delete this link?')) {
       try {
-        const response = await fetch(`/api/links/${id}`, {
+        const response = await fetch(`http://localhost:8080/api/links/${id}`, {
           method: 'DELETE',
         })
         if (response.ok) {

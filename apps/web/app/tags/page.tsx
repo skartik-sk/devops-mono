@@ -1,144 +1,97 @@
 "use client"
 
-import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { SearchBar } from "@/components/search-bar"
-import { LinkGrid } from "@/components/link-grid"
-import { LinkModal } from "@/components/link-modal"
+import { useState, useEffect } from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card"
+import { Button } from "../../components/ui/button"
+import { Badge } from "../../components/ui/badge"
+import { SearchBar } from "../../src/components/search-bar"
+import { LinkGrid } from "../../src/components/link-grid"
+import { LinkModal } from "../../src/components/link-modal"
 import { Tag, Hash, TrendingUp, Calendar, Filter } from "lucide-react"
 
-// Mock tags data with associated links
-const mockTags = [
-  {
-    id: "1",
-    name: "react",
-    count: 8,
-    color: "bg-blue-500",
-    trending: true,
-    lastUsed: "2024-01-15",
-    links: [
-      {
-        id: "1",
-        title: "Next.js Documentation",
-        url: "https://nextjs.org/docs",
-        description: "The official Next.js documentation with guides, API reference, and examples.",
-        tags: ["nextjs", "react", "documentation"],
-        favicon: "/nextjs-logo.jpg",
-        createdAt: "2024-01-15",
-        category: "Development",
-      },
-      {
-        id: "5",
-        title: "React Patterns",
-        url: "https://reactpatterns.com",
-        description: "Common React patterns and best practices for building scalable applications.",
-        tags: ["react", "patterns", "best-practices"],
-        favicon: "/react-logo.jpg",
-        createdAt: "2024-01-11",
-        category: "Development",
-      },
-    ],
-  },
-  {
-    id: "2",
-    name: "css",
-    count: 6,
-    color: "bg-purple-500",
-    trending: false,
-    lastUsed: "2024-01-14",
-    links: [
-      {
-        id: "2",
-        title: "Tailwind CSS Components",
-        url: "https://tailwindui.com",
-        description: "Beautiful UI components built with Tailwind CSS.",
-        tags: ["tailwind", "css", "components"],
-        favicon: "/tailwind-logo.jpg",
-        createdAt: "2024-01-14",
-        category: "Design",
-      },
-      {
-        id: "6",
-        title: "CSS Grid Generator",
-        url: "https://cssgrid-generator.netlify.app",
-        description: "Interactive tool to generate CSS Grid layouts with visual interface.",
-        tags: ["css", "grid", "tool"],
-        favicon: "/css-logo.jpg",
-        createdAt: "2024-01-10",
-        category: "Tools",
-      },
-    ],
-  },
-  {
-    id: "3",
-    name: "documentation",
-    count: 5,
-    color: "bg-green-500",
-    trending: true,
-    lastUsed: "2024-01-15",
-    links: [],
-  },
-  {
-    id: "4",
-    name: "design-system",
-    count: 4,
-    color: "bg-orange-500",
-    trending: false,
-    lastUsed: "2024-01-12",
-    links: [],
-  },
-  {
-    id: "5",
-    name: "typescript",
-    count: 7,
-    color: "bg-indigo-500",
-    trending: true,
-    lastUsed: "2024-01-13",
-    links: [],
-  },
-  {
-    id: "6",
-    name: "tools",
-    count: 3,
-    color: "bg-teal-500",
-    trending: false,
-    lastUsed: "2024-01-10",
-    links: [],
-  },
-  {
-    id: "7",
-    name: "nextjs",
-    count: 4,
-    color: "bg-pink-500",
-    trending: true,
-    lastUsed: "2024-01-15",
-    links: [],
-  },
-  {
-    id: "8",
-    name: "figma",
-    count: 2,
-    color: "bg-red-500",
-    trending: false,
-    lastUsed: "2024-01-12",
-    links: [],
-  },
-]
+interface TagData {
+  name: string
+  count: number
+  color: string
+  trending?: boolean
+  lastUsed?: string
+  links?: Array<{
+    id: number
+    title: string
+    url: string
+    description?: string
+    tags: string[]
+    createdAt: string
+  }>
+}
 
 export default function TagsPage() {
+  const [tags, setTags] = useState<TagData[]>([])
+  const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
-  const [selectedTag, setSelectedTag] = useState(null)
+  const [selectedTag, setSelectedTag] = useState<TagData | null>(null)
   const [sortBy, setSortBy] = useState("count") // count, name, recent
   const [showTrendingOnly, setShowTrendingOnly] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedLink, setSelectedLink] = useState(null)
 
-  const filteredTags = mockTags
+  useEffect(() => {
+    fetchTags()
+  }, [])
+
+  const fetchTags = async () => {
+    try {
+      const response = await fetch('http://localhost:8080/api/links')
+      if (response.ok) {
+        const links = await response.json()
+        const tagMap = new Map<string, TagData>()
+
+        links.forEach((link: any) => {
+          if (link.tags && Array.isArray(link.tags)) {
+            link.tags.forEach((tagName: string) => {
+              if (!tagMap.has(tagName)) {
+                tagMap.set(tagName, {
+                  name: tagName,
+                  count: 0,
+                  color: getRandomColor(),
+                  links: []
+                })
+              }
+              const tag = tagMap.get(tagName)!
+              tag.count++
+              if (tag.links) {
+                tag.links.push({
+                  id: link.id,
+                  title: link.title,
+                  url: link.url,
+                  description: link.description,
+                  tags: link.tags,
+                  createdAt: link.createdAt
+                })
+              }
+            })
+          }
+        })
+
+        const sortedTags = Array.from(tagMap.values()).sort((a, b) => b.count - a.count)
+        setTags(sortedTags)
+      }
+    } catch (error) {
+      console.error('Error fetching tags:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const getRandomColor = () => {
+    const colors = ["bg-blue-500", "bg-purple-500", "bg-green-500", "bg-orange-500", "bg-red-500", "bg-pink-500", "bg-indigo-500", "bg-teal-500"]
+    return colors[Math.floor(Math.random() * colors.length)]
+  }
+
+  const filteredTags = tags
     .filter((tag) => {
       const matchesSearch = tag.name.toLowerCase().includes(searchQuery.toLowerCase())
-      const matchesTrending = !showTrendingOnly || tag.trending
+      const matchesTrending = !showTrendingOnly || tags.indexOf(tag) < trendingTags
       return matchesSearch && matchesTrending
     })
     .sort((a, b) => {
@@ -146,15 +99,15 @@ export default function TagsPage() {
         case "name":
           return a.name.localeCompare(b.name)
         case "recent":
-          return new Date(b.lastUsed).getTime() - new Date(a.lastUsed).getTime()
+          return b.count - a.count
         case "count":
         default:
           return b.count - a.count
       }
     })
 
-  const handleTagClick = (tag) => {
-    setSelectedTag(selectedTag?.id === tag.id ? null : tag)
+  const handleTagClick = (tag: TagData) => {
+    setSelectedTag(selectedTag?.name === tag.name ? null : tag)
   }
 
   const handleLinkClick = (link) => {
@@ -162,10 +115,10 @@ export default function TagsPage() {
     setIsModalOpen(true)
   }
 
-  const totalTags = mockTags.length
-  const trendingTags = mockTags.filter((tag) => tag.trending).length
-  const totalLinks = mockTags.reduce((sum, tag) => sum + tag.count, 0)
-  const mostUsedTag = mockTags.reduce((prev, current) => (prev.count > current.count ? prev : current))
+  const totalTags = tags.length
+  const trendingTags = Math.floor(tags.length * 0.3)
+  const totalLinks = tags.reduce((sum, tag) => sum + tag.count, 0)
+  const mostUsedTag = tags.length > 0 ? tags[0] : { name: "None", count: 0 }
 
   return (
     <main className="container mx-auto px-4 py-8">
@@ -253,13 +206,21 @@ export default function TagsPage() {
 
       {/* Tags Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
-        {filteredTags.map((tag) => (
-          <Card
-            key={tag.id}
-            className={`bg-card border-border cursor-pointer transition-all hover:shadow-lg ${
-              selectedTag?.id === tag.id ? "ring-2 ring-primary" : ""
-            }`}
-            onClick={() => handleTagClick(tag)}
+        {loading ? (
+          <div className="col-span-full flex items-center justify-center py-12">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+              <p className="text-muted-foreground">Loading tags...</p>
+            </div>
+          </div>
+        ) : (
+          filteredTags.map((tag, index) => (
+            <Card
+              key={`${tag.name}-${index}`}
+              className={`bg-card border-border cursor-pointer transition-all hover:shadow-lg ${
+                selectedTag?.name === tag.name ? "ring-2 ring-primary" : ""
+              }`}
+              onClick={() => handleTagClick(tag)}
           >
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-2">
@@ -267,7 +228,7 @@ export default function TagsPage() {
                   <div className={`w-3 h-3 rounded-full ${tag.color}`} />
                   <span className="font-medium text-foreground">#{tag.name}</span>
                 </div>
-                {tag.trending && (
+                {index < trendingTags && (
                   <Badge variant="secondary" className="text-xs bg-green-500/10 text-green-500 border-green-500/20">
                     <TrendingUp className="h-2 w-2 mr-1" />
                     Trending
@@ -280,15 +241,16 @@ export default function TagsPage() {
               </div>
 
               <div className="text-xs text-muted-foreground">
-                Last used {new Date(tag.lastUsed).toLocaleDateString()}
+                Most used tag
               </div>
             </CardContent>
           </Card>
-        ))}
+          ))
+        )}
       </div>
 
       {/* Selected Tag Links */}
-      {selectedTag && selectedTag.links.length > 0 && (
+      {selectedTag && selectedTag.links && selectedTag.links.length > 0 && (
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-6">
             <div className={`w-4 h-4 rounded-full ${selectedTag.color}`} />
@@ -298,7 +260,7 @@ export default function TagsPage() {
             </Badge>
           </div>
 
-          <LinkGrid links={selectedTag.links} onLinkClick={handleLinkClick} />
+          <LinkGrid links={selectedTag.links} onEdit={handleLinkClick} />
         </div>
       )}
 
