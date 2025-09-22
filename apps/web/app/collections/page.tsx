@@ -10,7 +10,7 @@ import { Textarea } from "../../components/ui/textarea"
 import { Label } from "../../components/ui/label"
 import { Plus, FolderOpen, LinkIcon, Calendar, MoreVertical, Edit, Trash2 } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../../src/components/ui/dropdown-menu"
-import { API_BASE_URL } from "../../lib/api-config"
+import { API_BASE_URL, getApiUrl } from "../../lib/api-config"
 
 interface Collection {
   id: number

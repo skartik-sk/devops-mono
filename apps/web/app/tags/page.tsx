@@ -8,6 +8,7 @@ import { SearchBar } from "../../src/components/search-bar"
 import { LinkGrid } from "../../src/components/link-grid"
 import { LinkModal } from "../../src/components/link-modal"
 import { Tag, Hash, TrendingUp, Calendar, Filter } from "lucide-react"
+import { getApiUrl } from "../../lib/api-config"
 
 interface TagData {
   name: string

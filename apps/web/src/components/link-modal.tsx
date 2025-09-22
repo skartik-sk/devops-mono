@@ -11,6 +11,7 @@ import { Textarea } from "../components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select"
 import { ExternalLink, Copy, Edit, Trash2, Calendar, Tag, Plus, X } from "lucide-react"
 import { useState } from "react"
+import { getApiUrl } from "../../lib/api-config"
 
 interface Link {
   id: number

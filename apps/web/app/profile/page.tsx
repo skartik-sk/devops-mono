@@ -11,7 +11,7 @@ import { Switch } from "../../components/ui/switch"
 import { Separator } from "../../components/ui/separator"
 import { Avatar, AvatarFallback, AvatarImage } from "../../components/ui/avatar"
 import { User, Mail, Calendar, Settings, Bell, Shield, Download, Upload, Trash2, Eye, EyeOff, Save } from "lucide-react"
-import { API_BASE_URL } from "../../lib/api-config"
+import { API_BASE_URL, getApiUrl } from "../../lib/api-config"
 
 interface UserStats {
   totalLinks: number

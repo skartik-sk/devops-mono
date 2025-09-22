@@ -157,12 +157,32 @@ const server = Bun.serve({
       }
     }
 
-    // Single collection operations (PUT and DELETE)
+    // Single collection operations (GET, PUT and DELETE)
     const collectionMatch = url.pathname.match(/^\/api\/collections\/(\d+)$/)
     if (collectionMatch) {
       const collectionId = parseInt(collectionMatch[1])
 
       try {
+        if (method === 'GET') {
+          const collection = await prisma.collection.findUnique({
+            where: { id: collectionId },
+            include: {
+              _count: {
+                select: { links: true }
+              },
+              links: {
+                orderBy: { createdAt: 'desc' }
+              }
+            }
+          })
+
+          if (!collection) {
+            return createTextResponse('Collection not found', 404)
+          }
+
+          return createResponse(collection)
+        }
+
         if (method === 'PUT') {
           const body = await req.json() as Partial<CollectionData>
           const { name, description, color } = body
@@ -212,12 +232,29 @@ const server = Bun.serve({
       }
     }
 
-    // Single link operations (PUT and DELETE)
+    // Single link operations (GET, PUT and DELETE)
     const linkMatch = url.pathname.match(/^\/api\/links\/(\d+)$/)
     if (linkMatch) {
       const linkId = parseInt(linkMatch[1])
 
       try {
+        if (method === 'GET') {
+          const link = await prisma.link.findUnique({
+            where: { id: linkId },
+            include: {
+              collection: {
+                select: { name: true, color: true }
+              }
+            }
+          })
+
+          if (!link) {
+            return createTextResponse('Link not found', 404)
+          }
+
+          return createResponse(link)
+        }
+
         if (method === 'PUT') {
           const body = await req.json() as Partial<LinkData>
           const { title, url: linkUrl, description, tags, isPublic, collectionId } = body
@@ -344,7 +381,7 @@ const server = Bun.serve({
             }
           })
 
-          return createResponse(newUser, { status: 201 })
+          return createResponse(newUser, 201)
         }
       } catch (error) {
         console.error('Error with /api/users:', error)
@@ -400,7 +437,7 @@ const server = Bun.serve({
             }
           })
 
-          return createResponse(savedLink, { status: 201 })
+          return createResponse(savedLink, 201)
         }
       } catch (error) {
         console.error(`Error with /api/users/${userId}/saved-links:`, error)
