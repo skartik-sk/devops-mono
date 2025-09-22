@@ -40,7 +40,7 @@ jobs:
             sudo docker pull ${{ secrets.DOCKER_USERNAME }}/mono-ws:${{ github.sha }}
             sudo docker stop ws || true
             sudo docker rm ws || true
-            sudo docker run -d --name ws -p 4041:8081 -e DATABASE_URL="${{ secrets.DATABASE_URL }}" ${{ secrets.DOCKER_USERNAME }}/mono-ws:${{ github.sha }}
+            sudo docker run -d --name ws -p 4041:8081 -e DATABASE_URL="${{ secrets.DATABASE_URL }}" -e NODE_ENV=production ${{ secrets.DOCKER_USERNAME }}/mono-ws:${{ github.sha }}
             sudo docker images --format "{{.Repository}}:{{.Tag}} {{.ID}}" | grep "mono-ws" | grep -v "${{ github.sha }}" | awk '{print $2}' | xargs sudo docker rmi -f || true
         
 
