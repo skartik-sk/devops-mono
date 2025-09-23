@@ -413,7 +413,9 @@ ssh user@server 'docker-compose up -d'
 This project is licensed under the MIT License.
 
 ---
+<img width="1792" height="1131" alt="Screenshot 2025-09-23 at 6 54 26 PM" src="https://github.com/user-attachments/assets/9c33881c-a69d-4ac7-bb95-2779ba4644be" />
 
 **Built with ❤️ using modern DevOps practices**
+
 
 For more information about the implementation details, check out the source code and documentation in each service directory.
